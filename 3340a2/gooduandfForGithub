@@ -1,0 +1,197 @@
+/**
+ * Class defining a UnionFind object.
+ * 
+ * Nicholas Gardi - 250868721
+ */
+
+import java.util.Arrays;
+
+public class uandf 
+{	
+	private int size;					// The final size of the UnionFind object after finalSets
+	private int[] parent;				// The array storing the parents of each value (index)
+	private int[] rank;					// The array storing the rank of each parent
+	private boolean finalized = false;	// Flag indicating whether the set has been finalized, disabling makeSet and unionSets
+	
+	
+	
+	/**
+	 * Constructor which creates a UnionFind object of size max. The zeroth element is ignored as required.
+	 * @param max		- The size of the UnionFind object.
+	 */
+	public uandf(int max)
+	{
+		this.parent = new int[max + 1];
+		this.rank = new int[max + 1];
+	}
+	
+	
+	
+	/**
+	 * Method which invokes the constructor, creating a UnionFind object of size n.
+	 * @param n			- The maximum value in the UnionFind
+	 * @return			- A UnionFind object with values [1...n]
+	 */
+	public static uandf uandf(int n)
+	{
+		return new uandf(n);
+	}
+	
+	/**
+	 * Method which forces the creation of a new set with one member i, overwriting any existing set in its place.
+	 * It will expand the UnionFind object if the new set is beyond its domain.
+	 * @param i			- The new set
+	 */
+	public void make_set(int i)
+	{
+		if (!finalized)
+		{
+			// If the index already exists in the array, change it
+			if (i < this.parent.length)
+			{
+				parent[i] = i;
+				rank[i] = 0;
+			}
+			
+			// Otherwise, expand the array to fit the new object, expanding the rank array appropriately
+			else
+			{
+				int[] newParent = new int[i + 1];
+				int[] newRank = new int[i + 1];
+				
+				// Copy over existing values
+				for (int j = 1; j < parent.length; j++)
+				{
+					newParent[j] = this.parent[j];
+					newRank[j] = this.rank[j];
+				}
+				
+				this.parent = newParent;
+				this.rank = newRank;
+			}
+		}
+	}
+	
+	/**
+	 * Method to unite the dynamic sets of i and j into a new set that is the union of the two sets.
+	 * @param i			- The first set to unite
+	 * @param j			- The second set to unite
+	 */
+	public void union_sets(int i, int j)
+	{
+		if (!finalized)
+		{
+			int set1 = find_set(i);
+			int set2 = find_set(j);
+			
+			// If the values are identical, do nothing
+			if (set1 == set2)
+				return;
+			
+			// If the rank of the first set is greater than the second, add the second set to the first set
+			if (this.rank[set1] > this.rank[set2])
+				this.parent[set2] = set1;
+			
+			// Otherwise, if the rank of the second set is greater than the first, add the first set to the second set
+			else if (this.rank[set1] < this.rank[set2])
+				this.parent[set1] = set2;
+			
+			// Otherwise, they have the same rank and thus the first set is chosen arbitrarily as the root, who's rank is incremented appropriately
+			else
+			{
+				this.parent[set2] = set1;
+				this.rank[set1]++;
+			}
+		}
+	}
+	
+	/**
+	 * Method which finds and returns the representative of the set containing i.
+	 * @param i			- The set to look for
+	 * @return			- The representative of i
+	 */
+	public int find_set(int i)
+	{
+		if (!finalized)
+		{
+			if (parent[i] != i)
+				return this.parent[i] = find_set(parent[i]);
+			
+			else
+				return i;
+		}
+		
+		else
+			return parent[i];
+	}
+	
+	/**
+	 * Method which returns the number of current sets and finalizes the set so that no modifications can be made.
+	 * @return			- The number of current sets
+	 */
+	public int final_sets()
+	{
+		for (int i = 1; i < parent.length; i++)
+		{
+			if (parent[i] != 0)
+				find_set(i);
+		}
+		
+		int counter = 0;
+		
+		for (int i = 1; i < parent.length; i++)
+		{
+			if (parent[i] == i)
+			{
+				counter++;
+				parent[i] = counter;
+				
+				rank[i] = 1;				
+			}
+			
+			else
+				rank[i] = 0;
+		}
+		
+		for (int i = 1; i < parent.length; i ++)
+		{
+			if (rank[i] == 0 && parent[i] > 0)
+				parent[i] = parent[parent[i]];
+		}
+		
+		this.finalized = true;
+		this.size = counter;
+		
+		return counter;
+	}
+	
+	/**
+	 * Method which returns the final state of the UnionFind object.
+	 * @return			- True if the set has been finalized, false otherwise
+	 */
+	public boolean isFinal()
+	{
+		return this.finalized;
+	}
+	
+	/**
+	 * Method to return the final size of the UnionFind as the number of current sets.
+	 * @return			- The number of current sets in the finalized UnionFind. If the set has not been finalized, return -1
+	 */
+	public int size()
+	{
+		if (finalized)
+			return this.size;
+		
+		else return -1;
+	}
+	
+	/**
+	 * Method which returns a string representation of the UnionFind object.
+	 * @return			- The string representation of the UnionFind object
+	 */
+	public String toString()
+	{
+		return "UnionFind\np: " + Arrays.toString(this.parent) + "\nr: " + Arrays.toString(this.rank) + "\n";
+	}
+}
